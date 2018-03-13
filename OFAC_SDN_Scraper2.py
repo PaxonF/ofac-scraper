@@ -1,6 +1,6 @@
 from mongoengine import *
-#import urllib2
-from urllib.request import urlopen
+import urllib2
+#from urllib.request import urlopen
 import time
 import xml.etree.ElementTree as ET
 import pprint
@@ -52,7 +52,7 @@ dropped = []
 all_uid = []
 
 #Opens current SDN list and creates a parsed file
-page = urlopen("https://www.treasury.gov/ofac/downloads/sdn.xml")
+page = urllib2.urlopen("https://www.treasury.gov/ofac/downloads/sdn.xml")
 text = page.read()
 path = "XML Pulls"
 file = "SDN List Full XML Pull " + time.strftime("%d%B%y") + ".txt"
@@ -68,12 +68,12 @@ for x in publishInformation:
 
 #writes new file to "XML Pulls" directory
 if date in SanctionedEntity.objects.distinct("source_date"):
-	print ("List for %s is already saved" % (date))
+	print "List for %s is already saved" % (date)
 else:
 	with open(os.path.join(path, file), 'w+') as f:
 		f.write(str(text))
 		f.close
-	print ("Finished and saved " + file)
+	print "Finished and saved " + file
 
 
 
@@ -97,10 +97,9 @@ def addNewEntity(entity):
 			AKACategory = aka.find('{http://tempuri.org/sdnList.xsd}category').text
 			if aka.find('{http://tempuri.org/sdnList.xsd}firstName') is not None:
 				AKAFirstName = aka.find('{http://tempuri.org/sdnList.xsd}firstName').text
-				new_Alias = Alias(category=AKACategory, name=AKAName, first_name=AKAFirstName)
+ 				new_Alias = Alias(category=AKACategory, name=AKAName, first_name=AKAFirstName)
 			else:
 				new_Alias = Alias(category=AKACategory, name=AKAName)
-			
 			newAliases.append(new_Alias)
 			
 		entry.aliases=newAliases
@@ -171,28 +170,28 @@ def checkIfExisting(entity, allCurrentIDs):
 	if entity.find('{http://tempuri.org/sdnList.xsd}uid').text in allCurrentIDs:
 		updateEntity(entity)
 		
-		print ("  Updated %s" % (entity.find('{http://tempuri.org/sdnList.xsd}uid').text))
+		print "  Updated %s" % (entity.find('{http://tempuri.org/sdnList.xsd}uid').text)
 		updated.append(entity.find('{http://tempuri.org/sdnList.xsd}uid').text)
 	else:
 		addNewEntity(entity)
 		
-		print ("    Added %s" % (entity.find('{http://tempuri.org/sdnList.xsd}uid').text))
+		print "    Added %s" % (entity.find('{http://tempuri.org/sdnList.xsd}uid').text)
 		added.append(entity.find('{http://tempuri.org/sdnList.xsd}uid').text)
 
 #runningcode
 # print "Starting to check entities"
 for entity in fullTree:
-	print ("checking %s ...." % (entity.find('{http://tempuri.org/sdnList.xsd}uid').text))
+	print "checking %s ...." % (entity.find('{http://tempuri.org/sdnList.xsd}uid').text)
 	checkIfExisting(entity, allCurrentIDs)
 	all_uid.append(entity.find('{http://tempuri.org/sdnList.xsd}uid').text)
-print ("Evaluated " + str(len(all_uid)))
+print "Evaluated " + str(len(all_uid))
 
 # check if record is no longer current
 for id in allCurrentIDs:
 	if id not in all_uid:
 		SanctionedEntity.objects(unique_id=id).update_one(set__is_current=False)
 		dropped.append(id)
-		print ("Dropped %s from the list" % (id))
+		print "Dropped %s from the list" % (id)
 
 
 deltaFileName = "delta file " + time.strftime("%d%B%y") + ".txt"	
