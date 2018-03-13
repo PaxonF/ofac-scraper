@@ -1,5 +1,6 @@
 from mongoengine import *
-import urllib2
+#import urllib2
+from urllib.request import urlopen
 import time
 import xml.etree.ElementTree as ET
 import pprint
@@ -51,7 +52,7 @@ dropped = []
 all_uid = []
 
 #Opens current SDN list and creates a parsed file
-page = urllib2.urlopen("https://www.treasury.gov/ofac/downloads/sdn.xml")
+page = urlopen("https://www.treasury.gov/ofac/downloads/sdn.xml")
 text = page.read()
 path = "XML Pulls"
 file = "SDN List Full XML Pull " + time.strftime("%d%B%y") + ".txt"
